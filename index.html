@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Voice Assistant</title>
+<title>Personal Assistant</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -290,7 +290,7 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 style="font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: rgba(165,180,252,0.8);">VOICE ASSISTANT</h1>
+      <h1 style="font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: rgba(165,180,252,0.8);">VICTOR</h1>
       <div id="model-tag" class="status-label mt-1" style="color: rgba(100,116,139,0.7);">llama3.2:3b · local</div>
     </div>
     <div id="connection-dot" class="flex items-center gap-2">
@@ -333,6 +333,13 @@
         <line stroke-linecap="round" x1="8" x2="16" y1="23" y2="23"/>
       </svg>
     </button>
+    <button class="mic-btn" id="talk-btn" title="Continuous talk (press to toggle)">
+      <!-- wave icon -->
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color: #a5b4fc; width:20px;height:20px;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8S2 12 2 12z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z" />
+      </svg>
+    </button>
     <input type="text" id="text-input" class="text-input flex-1 px-4 py-2 text-sm" placeholder="Or type a message…" />
     <button class="send-btn" id="send-btn">Send</button>
   </div>
@@ -359,6 +366,8 @@ let streamBuffer = '';
 let streamFlushTimer = null;
 const STREAM_FLUSH_MS = 250; // flush small pauses
 const STREAM_MIN_CHARS = 60; // flush when buffer gets large
+let continuousTalk = false;
+const VAD_SILENCE_MS = 1500; // default
 
 function chooseVoice(voices) {
   if (!voices || !voices.length) return null;
@@ -454,7 +463,8 @@ async function sendMessage(userText) {
   addMessage('user', userText);
 
   setState('thinking');
-  stopListening();
+  // Only stop recognition if not in continuous talk mode
+  if (!continuousTalk) stopListening();
 
   const assistantDiv = addMessage('assistant', '', true);
   let fullResponse = '';
@@ -624,7 +634,11 @@ function setupRecognition() {
       else interim += t;
     }
 
-    // VAD: send after 1.5s silence
+    // Ignore recognition while assistant TTS is speaking to avoid self-capture
+    if (continuousTalk && window.speechSynthesis && window.speechSynthesis.speaking) return;
+
+    // VAD: send after configurable silence (1s when continuousTalk enabled, otherwise default)
+    const silenceMs = continuousTalk ? 1000 : VAD_SILENCE_MS;
     if (finalTranscript || interim) {
       vadTimeout = setTimeout(() => {
         const text = (finalTranscript + interim).trim();
@@ -632,7 +646,7 @@ function setupRecognition() {
           textInput.value = '';
           sendMessage(text);
         }
-      }, 1500);
+      }, silenceMs);
     }
   };
 
@@ -671,6 +685,30 @@ function stopListening() {
   if (!isBusy) setState('idle');
 }
 
+// Continuous talk mode: keep mic active and use shorter VAD
+const talkBtn = document.getElementById('talk-btn');
+function setContinuousTalk(on) {
+  continuousTalk = !!on;
+  if (continuousTalk) {
+    talkBtn.classList.add('active');
+    talkBtn.title = 'Continuous talk: ON (sends after 1s silence)';
+    // ensure recognition running
+    if (!recognition) recognition = setupRecognition();
+    if (!isListening) {
+      isListening = true;
+      micBtn.classList.add('active');
+      try { recognition.start(); } catch {}
+    }
+  } else {
+    talkBtn.classList.remove('active');
+    talkBtn.title = 'Continuous talk: OFF';
+  }
+}
+
+talkBtn.addEventListener('click', () => {
+  setContinuousTalk(!continuousTalk);
+});
+
 function startRecognition() {
   if (!recognition) recognition = setupRecognition();
   if (!recognition || !isListening) return;
@@ -697,7 +735,7 @@ textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend
 window.addEventListener('load', () => {
   setTimeout(() => {
     setState('idle');
-    addMessage('assistant', 'Hey! Mic button to start talking, or type below. Ready when you are.');
+    addMessage('assistant', 'Hey! Press mic button to start talking, or type below. Ready when you are.');
   }, 400);
 });
 </script>
