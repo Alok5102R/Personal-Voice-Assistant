@@ -519,8 +519,10 @@ function setupRecognition() {
 
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i].transcript;
-      if (e.results[i].isFinal) finalTranscript += t;
+      const result = e.results[i];
+      // Each result is a SpeechRecognitionResult; alternatives live at result[0].transcript
+      const t = (result[0] && result[0].transcript) ? result[0].transcript : '';
+      if (result.isFinal) finalTranscript += t;
       else interim += t;
     }
 
