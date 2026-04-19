@@ -15,13 +15,16 @@
 
   * { box-sizing: border-box; }
 
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: #080810;
     color: #e2e8f0;
-    min-height: 100vh;
-    margin: 0;
-    overflow: hidden;
   }
 
   /* ── Background grid ── */
@@ -37,12 +40,39 @@
     z-index: 0;
   }
 
+  /* Noise overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+  }
+
+  /* ── Root layout ── */
+  #app {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh; /* dynamic viewport height — handles mobile browser chrome */
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 1rem;
+  }
+
   /* ── Orb ── */
   .orb-wrapper {
     position: relative;
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
     flex-shrink: 0;
+  }
+
+  @media (min-height: 700px) {
+    .orb-wrapper { width: 200px; height: 200px; }
   }
 
   .orb-glow {
@@ -71,33 +101,13 @@
     transition: transform 0.1s ease;
   }
 
-  /* Idle: gentle float */
-  .orb-wrapper.idle .orb {
-    animation: orb-float 4s ease-in-out infinite;
-  }
+  .orb-wrapper.idle .orb        { animation: orb-float 4s ease-in-out infinite; }
+  .orb-wrapper.listening .orb   { animation: orb-listen 0.6s ease-in-out infinite alternate; }
+  .orb-wrapper.listening .orb-glow { animation: glow-listen 0.6s ease-in-out infinite alternate; }
+  .orb-wrapper.thinking .orb    { animation: orb-think 1.2s linear infinite; }
+  .orb-wrapper.speaking .orb    { animation: orb-speak 0.4s ease-in-out infinite alternate; }
+  .orb-wrapper.speaking .orb-glow { animation: glow-speak 0.4s ease-in-out infinite alternate; }
 
-  /* Listening: reactive rings expand outward */
-  .orb-wrapper.listening .orb {
-    animation: orb-listen 0.6s ease-in-out infinite alternate;
-  }
-  .orb-wrapper.listening .orb-glow {
-    animation: glow-listen 0.6s ease-in-out infinite alternate;
-  }
-
-  /* Thinking: rotate shimmer */
-  .orb-wrapper.thinking .orb {
-    animation: orb-think 1.2s linear infinite;
-  }
-
-  /* Speaking: pulse outward with voice */
-  .orb-wrapper.speaking .orb {
-    animation: orb-speak 0.4s ease-in-out infinite alternate;
-  }
-  .orb-wrapper.speaking .orb-glow {
-    animation: glow-speak 0.4s ease-in-out infinite alternate;
-  }
-
-  /* Ring layers for listening */
   .ring {
     position: absolute;
     inset: 0;
@@ -110,11 +120,10 @@
   .orb-wrapper.listening .ring:nth-child(2) { animation: ring-expand 1.2s ease-out infinite 0.4s; }
   .orb-wrapper.listening .ring:nth-child(3) { animation: ring-expand 1.2s ease-out infinite 0.8s; }
 
-  .orb-wrapper.speaking .ring:nth-child(1) { animation: ring-expand-fast 0.8s ease-out infinite 0s; border-color: rgba(6,182,212,0.5); }
+  .orb-wrapper.speaking .ring:nth-child(1) { animation: ring-expand-fast 0.8s ease-out infinite 0s;    border-color: rgba(6,182,212,0.5); }
   .orb-wrapper.speaking .ring:nth-child(2) { animation: ring-expand-fast 0.8s ease-out infinite 0.27s; border-color: rgba(6,182,212,0.5); }
   .orb-wrapper.speaking .ring:nth-child(3) { animation: ring-expand-fast 0.8s ease-out infinite 0.54s; border-color: rgba(6,182,212,0.5); }
 
-  /* Waveform bars (shown during speaking) */
   .waveform {
     position: absolute;
     bottom: -44px;
@@ -126,7 +135,7 @@
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  .orb-wrapper.speaking .waveform { opacity: 1; }
+  .orb-wrapper.speaking .waveform  { opacity: 1; }
   .orb-wrapper.listening .waveform { opacity: 0.4; }
 
   .bar {
@@ -136,7 +145,7 @@
     height: 4px;
     transform-origin: bottom center;
   }
-  .orb-wrapper.speaking .bar:nth-child(1) { animation: bar-wave 0.5s ease-in-out infinite 0.0s; }
+  .orb-wrapper.speaking .bar:nth-child(1) { animation: bar-wave 0.5s ease-in-out infinite 0.00s; }
   .orb-wrapper.speaking .bar:nth-child(2) { animation: bar-wave 0.5s ease-in-out infinite 0.08s; }
   .orb-wrapper.speaking .bar:nth-child(3) { animation: bar-wave 0.5s ease-in-out infinite 0.16s; }
   .orb-wrapper.speaking .bar:nth-child(4) { animation: bar-wave 0.5s ease-in-out infinite 0.24s; }
@@ -144,7 +153,7 @@
   .orb-wrapper.speaking .bar:nth-child(6) { animation: bar-wave 0.5s ease-in-out infinite 0.24s; }
   .orb-wrapper.speaking .bar:nth-child(7) { animation: bar-wave 0.5s ease-in-out infinite 0.16s; }
   .orb-wrapper.speaking .bar:nth-child(8) { animation: bar-wave 0.5s ease-in-out infinite 0.08s; }
-  .orb-wrapper.speaking .bar:nth-child(9) { animation: bar-wave 0.5s ease-in-out infinite 0.0s; }
+  .orb-wrapper.speaking .bar:nth-child(9) { animation: bar-wave 0.5s ease-in-out infinite 0.00s; }
 
   .orb-wrapper.listening .bar { background: rgba(99,102,241,0.6); height: 4px !important; animation: none; }
 
@@ -154,36 +163,36 @@
     50%      { transform: translateY(-8px) scale(1.02); }
   }
   @keyframes orb-listen {
-    0%   { transform: scale(1); box-shadow: 0 0 40px rgba(99,102,241,0.5), 0 0 80px rgba(99,102,241,0.2), inset 0 0 30px rgba(165,180,252,0.1); }
-    100% { transform: scale(1.08); box-shadow: 0 0 60px rgba(99,102,241,0.8), 0 0 120px rgba(99,102,241,0.4), inset 0 0 40px rgba(165,180,252,0.2); }
+    0%   { transform: scale(1);    box-shadow: 0 0 40px rgba(99,102,241,0.5),  0 0 80px  rgba(99,102,241,0.2),  inset 0 0 30px rgba(165,180,252,0.1); }
+    100% { transform: scale(1.08); box-shadow: 0 0 60px rgba(99,102,241,0.8),  0 0 120px rgba(99,102,241,0.4),  inset 0 0 40px rgba(165,180,252,0.2); }
   }
   @keyframes orb-think {
-    0%   { filter: hue-rotate(0deg) brightness(1); }
+    0%   { filter: hue-rotate(0deg)  brightness(1); }
     50%  { filter: hue-rotate(30deg) brightness(1.15); }
-    100% { filter: hue-rotate(0deg) brightness(1); }
+    100% { filter: hue-rotate(0deg)  brightness(1); }
   }
   @keyframes orb-speak {
-    0%   { transform: scale(1); box-shadow: 0 0 40px rgba(6,182,212,0.4), 0 0 80px rgba(6,182,212,0.2), inset 0 0 30px rgba(165,243,252,0.1); background: radial-gradient(circle at 35% 35%, #a5f3fc 0%, #06b6d4 35%, #0e7490 65%, #083344 100%); }
+    0%   { transform: scale(1);    box-shadow: 0 0 40px rgba(6,182,212,0.4), 0 0 80px  rgba(6,182,212,0.2), inset 0 0 30px rgba(165,243,252,0.1); background: radial-gradient(circle at 35% 35%, #a5f3fc 0%, #06b6d4 35%, #0e7490 65%, #083344 100%); }
     100% { transform: scale(1.06); box-shadow: 0 0 70px rgba(6,182,212,0.7), 0 0 130px rgba(6,182,212,0.3), inset 0 0 40px rgba(165,243,252,0.2); background: radial-gradient(circle at 35% 35%, #cffafe 0%, #22d3ee 35%, #0891b2 65%, #164e63 100%); }
   }
   @keyframes glow-pulse {
     0%,100% { opacity: 0.6; transform: scale(1); }
-    50%      { opacity: 1; transform: scale(1.05); }
+    50%      { opacity: 1;   transform: scale(1.05); }
   }
   @keyframes glow-listen {
-    0%   { opacity: 0.8; transform: scale(1); background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%); }
-    100% { opacity: 1; transform: scale(1.1); background: radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%); }
+    0%   { opacity: 0.8; transform: scale(1);   background: radial-gradient(circle, rgba(99,102,241,0.20) 0%, transparent 70%); }
+    100% { opacity: 1;   transform: scale(1.1); background: radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%); }
   }
   @keyframes glow-speak {
-    0%   { opacity: 0.6; background: radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%); }
-    100% { opacity: 1; background: radial-gradient(circle, rgba(6,182,212,0.4) 0%, transparent 70%); }
+    0%   { opacity: 0.6; background: radial-gradient(circle, rgba(6,182,212,0.20) 0%, transparent 70%); }
+    100% { opacity: 1;   background: radial-gradient(circle, rgba(6,182,212,0.40) 0%, transparent 70%); }
   }
   @keyframes ring-expand {
-    0%   { transform: scale(1); opacity: 0.6; }
+    0%   { transform: scale(1);   opacity: 0.6; }
     100% { transform: scale(2.2); opacity: 0; }
   }
   @keyframes ring-expand-fast {
-    0%   { transform: scale(1); opacity: 0.7; }
+    0%   { transform: scale(1);   opacity: 0.7; }
     100% { transform: scale(2.5); opacity: 0; }
   }
   @keyframes bar-wave {
@@ -192,11 +201,13 @@
   }
 
   /* ── Chat ── */
-  .chat-container {
-    font-family: 'DM Sans', sans-serif;
+  #chat-log {
     scrollbar-width: thin;
     scrollbar-color: rgba(99,102,241,0.3) transparent;
   }
+  #chat-log::-webkit-scrollbar       { width: 4px; }
+  #chat-log::-webkit-scrollbar-track { background: transparent; }
+  #chat-log::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
 
   .msg-user {
     background: rgba(99,102,241,0.12);
@@ -209,7 +220,7 @@
     border-radius: 16px 16px 16px 4px;
   }
 
-  /* Status label */
+  /* ── Status label ── */
   .status-label {
     font-family: 'Space Mono', monospace;
     font-size: 11px;
@@ -217,23 +228,26 @@
     text-transform: uppercase;
   }
 
-  /* Toggle button */
+  /* ── Buttons ── */
   .mic-btn {
-    width: 52px; height: 52px;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
     border-radius: 50%;
     border: 1px solid rgba(99,102,241,0.4);
     background: rgba(99,102,241,0.1);
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s ease;
     backdrop-filter: blur(8px);
   }
-  .mic-btn:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.7); }
+  .mic-btn:hover  { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.7); }
   .mic-btn.active { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.5); }
-
   .mic-btn svg { width: 20px; height: 20px; }
 
-  /* Text input */
+  /* ── Text input ── */
   .text-input {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
@@ -241,66 +255,75 @@
     color: #e2e8f0;
     outline: none;
     font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 0 1rem;
+    height: 44px;
+    width: 100%;
+    min-width: 0; /* flex shrink fix */
     transition: border-color 0.2s;
   }
-  .text-input:focus { border-color: rgba(99,102,241,0.5); }
+  .text-input:focus       { border-color: rgba(99,102,241,0.5); }
   .text-input::placeholder { color: rgba(148,163,184,0.5); }
 
   .send-btn {
+    flex-shrink: 0;
     background: rgba(99,102,241,0.8);
     border: none;
     border-radius: 10px;
     color: white;
     cursor: pointer;
-    padding: 0 16px;
+    padding: 0 18px;
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     font-weight: 500;
+    height: 44px;
     transition: background 0.2s;
-    height: 40px;
+    white-space: nowrap;
   }
-  .send-btn:hover { background: rgba(99,102,241,1); }
+  .send-btn:hover    { background: rgba(99,102,241,1); }
   .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* Cursor blink */
-  .cursor { display: inline-block; width: 2px; height: 1em; background: #a5b4fc; margin-left: 1px; animation: blink 1s step-end infinite; vertical-align: text-bottom; }
+  /* ── Cursor blink ── */
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: #a5b4fc;
+    margin-left: 1px;
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+  }
   @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
-  /* Scrollbar */
-  .chat-container::-webkit-scrollbar { width: 4px; }
-  .chat-container::-webkit-scrollbar-track { background: transparent; }
-  .chat-container::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
-
-  /* Noise overlay */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.4;
+  /* ── Orb section — shrinks on small / short screens ── */
+  #orb-section {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0 1.5rem;
   }
 </style>
 </head>
 <body>
 
-<div class="relative z-10 flex flex-col h-screen max-w-2xl mx-auto px-4 py-6">
+<!-- Single root container — everything lives here -->
+<div id="app">
 
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
+  <!-- ── Header ── -->
+  <header style="display:flex; align-items:center; justify-content:space-between; flex-shrink:0; margin-bottom:1rem;">
     <div>
-      <h1 style="font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: rgba(165,180,252,0.8);">VICTOR</h1>
-      <div id="model-tag" class="status-label mt-1" style="color: rgba(100,116,139,0.7);">llama3.2:3b · local</div>
+      <h1 style="font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.2em; color:rgba(165,180,252,0.8); margin:0;">VICTOR</h1>
+      <div id="model-tag" class="status-label" style="margin-top:4px; color:rgba(100,116,139,0.7);">llama3.2:3b · local</div>
     </div>
-    <div id="connection-dot" class="flex items-center gap-2">
-      <div class="w-2 h-2 rounded-full bg-slate-600"></div>
-      <span class="status-label" style="color: rgba(100,116,139,0.7);" id="conn-text">connecting</span>
+    <div id="connection-dot" style="display:flex; align-items:center; gap:8px;">
+      <div style="width:8px; height:8px; border-radius:50%; background:#475569;"></div>
+      <span class="status-label" style="color:rgba(100,116,139,0.7);" id="conn-text">connecting</span>
     </div>
-  </div>
+  </header>
 
-  <!-- Orb -->
-  <div class="flex flex-col items-center py-6 relative">
+  <!-- ── Orb ── -->
+  <div id="orb-section">
     <div class="orb-wrapper idle" id="orb">
       <div class="ring"></div>
       <div class="ring"></div>
@@ -313,115 +336,290 @@
         <div class="bar"></div><div class="bar"></div><div class="bar"></div>
       </div>
     </div>
-    <div class="mt-16">
-      <span class="status-label" id="orb-status" style="color: rgba(148,163,184,0.5);">idle</span>
+    <div style="margin-top:3rem;">
+      <span class="status-label" id="orb-status" style="color:rgba(148,163,184,0.5);">idle</span>
     </div>
   </div>
 
-  <!-- Chat history -->
-  <div class="chat-container flex-1 overflow-y-auto mb-4 space-y-3 px-1" id="chat-log">
-    <!-- Messages appear here -->
-  </div>
+  <!-- ── Chat history ── -->
+  <div id="chat-log" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:0 2px; margin-bottom:12px;"></div>
 
-  <!-- Controls -->
-  <div class="flex items-center gap-3 pb-2">
+  <!-- ── Controls ── -->
+  <div style="flex-shrink:0; display:flex; align-items:center; gap:10px; padding-bottom:env(safe-area-inset-bottom, 4px);">
+    <!-- Mic toggle -->
     <button class="mic-btn" id="mic-btn" title="Toggle voice input">
-      <svg id="mic-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color: #a5b4fc;">
+      <svg id="mic-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:#a5b4fc;">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
         <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         <line stroke-linecap="round" x1="12" x2="12" y1="19" y2="23"/>
-        <line stroke-linecap="round" x1="8" x2="16" y1="23" y2="23"/>
+        <line stroke-linecap="round" x1="8"  x2="16" y1="23" y2="23"/>
       </svg>
     </button>
+
+    <!-- Continuous-talk toggle -->
     <button class="mic-btn" id="talk-btn" title="Continuous talk (press to toggle)">
-      <!-- wave icon -->
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color: #a5b4fc; width:20px;height:20px;">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8S2 12 2 12z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z" />
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:#a5b4fc; width:20px; height:20px;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8S2 12 2 12z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z"/>
       </svg>
     </button>
-    <input type="text" id="text-input" class="text-input flex-1 px-4 py-2 text-sm" placeholder="Or type a message…" />
+
+    <!-- Text input -->
+    <input type="text" id="text-input" class="text-input" placeholder="Or type a message…" />
+
+    <!-- Send -->
     <button class="send-btn" id="send-btn">Send</button>
   </div>
-</div>
+
+</div><!-- /#app -->
 
 <script>
 const BACKEND = 'http://localhost:8000';
-const orb = document.getElementById('orb');
-const orbStatus = document.getElementById('orb-status');
-const chatLog = document.getElementById('chat-log');
-const micBtn = document.getElementById('mic-btn');
-const textInput = document.getElementById('text-input');
-const sendBtn = document.getElementById('send-btn');
+const orb        = document.getElementById('orb');
+const orbStatus  = document.getElementById('orb-status');
+const chatLog    = document.getElementById('chat-log');
+const micBtn     = document.getElementById('mic-btn');
+const talkBtn    = document.getElementById('talk-btn');
+const textInput  = document.getElementById('text-input');
+const sendBtn    = document.getElementById('send-btn');
 
-let messages = [];
-let isListening = false;
-let recognition = null;
-let vadTimeout = null;
-let isBusy = false;
-let ttsVoice = null;
-let pendingUtterances = 0;
-let streamingDone = false;
-let streamBuffer = '';
-let streamFlushTimer = null;
-const STREAM_FLUSH_MS = 250; // flush small pauses
-const STREAM_MIN_CHARS = 60; // flush when buffer gets large
+let messages       = [];
+let isListening    = false;
+let recognition    = null;
+let vadTimeout     = null;
+let isBusy         = false;
 let continuousTalk = false;
-const VAD_SILENCE_MS = 1500; // default
+
+const VAD_SILENCE_MS = 1500;
+
+/* ════════════════════════════════════════════════════════════
+   VOICE SELECTION
+   ════════════════════════════════════════════════════════════ */
+let ttsVoice = null;
 
 function chooseVoice(voices) {
   if (!voices || !voices.length) return null;
-  // Heuristic: prefer explicitly male voices / well-known male names
-  const maleHints = ['Male', 'David', 'Daniel', 'Alex', 'John', 'Mark', 'Paul', 'Matthew', 'Guy', 'Google UK English Male', 'Google US English'];
+  const maleHints = [
+    'Microsoft David', 'David', 'Google UK English Male',
+    'Google US English', 'Alex', 'Daniel', 'Daniel (en-GB)',
+    'Mark', 'Paul', 'Matthew', 'John', 'Male'
+  ];
   for (const hint of maleHints) {
-    const v = voices.find(v => (v.name && v.name.includes(hint)) || (v.voiceURI && v.voiceURI.includes(hint)));
+    const v = voices.find(v =>
+      (v.name && v.name.includes(hint)) ||
+      (v.voiceURI && v.voiceURI.includes(hint))
+    );
     if (v) return v;
   }
-  // fallback: prefer any English (US/UK) voice
-  const en = voices.find(v => v.lang && (v.lang.startsWith('en') || v.lang.includes('US') || v.lang.includes('GB')));
-  if (en) return en;
-  return voices[0];
+  const en = voices.find(v => v.lang &&
+    (v.lang.startsWith('en') || v.lang.includes('US') || v.lang.includes('GB'))
+  );
+  return en || voices[0];
 }
 
 function initVoices() {
   if (!window.speechSynthesis) return;
-  const voices = window.speechSynthesis.getVoices();
-  ttsVoice = chooseVoice(voices);
+  ttsVoice = chooseVoice(window.speechSynthesis.getVoices());
 }
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = initVoices;
   initVoices();
 }
 
-// ── State machine ──
+/* ════════════════════════════════════════════════════════════
+   WEB AUDIO PIPELINE
+   Routing: SpeechSynthesis → MediaStream → AudioContext →
+            LowpassFilter → WaveShaper (warmth) →
+            DynamicsCompressor → destination (speakers)
+   ════════════════════════════════════════════════════════════ */
+let audioCtx        = null;
+let audioMSDest     = null; // MediaStreamAudioDestinationNode
+let audioMSSrc      = null; // MediaStreamAudioSourceNode  (rebuilt per utterance)
+let audioChain      = null; // { filter, shaper, compressor }
+let hiddenAudio     = null; // <audio> element that drives the stream into WebAudio
+
+function buildAudioSink(makeWarm) {
+  // makeWarm = true  → apply lowpass + shaper + compressor
+  // makeWarm = false → bypass (direct output); used as fallback
+  if (audioCtx) { try { audioCtx.close(); } catch {} }
+
+  audioCtx    = new (window.AudioContext || window.webkitAudioContext)();
+  audioMSDest = audioCtx.createMediaStreamDestination();
+
+  /* Low-pass — roll off harsh high-freq artifacts */
+  const filter = audioCtx.createBiquadFilter();
+  filter.type            = 'lowpass';
+  filter.frequency.value = 3800;  // keep speech, cut hiss
+  filter.Q.value         = 0.6;
+
+  /* WaveShaper — adds odd-order harmonic warmth (subtle, not distortion) */
+  const shaper = audioCtx.createWaveShaper();
+  shaper.curve    = makeWarmCurve(256, 4);  // drive=4: gentle saturation
+  shaper.oversample = '4x';
+
+  /* DynamicsCompressor — smooths loudness spikes between sentences */
+  const compressor = audioCtx.createDynamicsCompressor();
+  compressor.threshold.value = -18;
+  compressor.knee.value      = 8;
+  compressor.ratio.value     = 3;
+  compressor.attack.value    = 0.003;
+  compressor.release.value   = 0.25;
+
+  /* Chain */
+  filter.connect(shaper);
+  shaper.connect(compressor);
+  compressor.connect(audioCtx.destination);
+
+  audioChain = { filter, shaper, compressor };
+
+  /* Hidden <audio> that plays the MediaStreamDestination's stream
+     so SpeechSynthesis → MediaStream → AudioContext loop is closed */
+  if (!hiddenAudio) {
+    hiddenAudio = document.createElement('audio');
+    hiddenAudio.style.display = 'none';
+    document.body.appendChild(hiddenAudio);
+  }
+  hiddenAudio.srcObject = audioMSDest.stream;
+  hiddenAudio.play().catch(() => {});
+}
+
+function makeWarmCurve(samples, drive) {
+  const curve = new Float32Array(samples);
+  const k     = drive;
+  for (let i = 0; i < samples; i++) {
+    const x = (i * 2) / samples - 1;
+    // Soft-clip sigmoid: tanh-like with drive
+    curve[i] = ((Math.PI + k) * x) / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SENTENCE-AWARE TTS QUEUE
+   Problem: LLM streams sub-word tokens. Splitting utterances
+   at token boundaries clips words mid-sound.
+   Solution:
+     1. Accumulate tokens into sentenceAccum
+     2. Flush ONLY at complete sentence boundaries
+        (punctuation + space/end) or hard-cap (200 chars)
+     3. Before flushing, trim to last whitespace so we never
+        cut a word in half across two utterances
+     4. Queue utterances — each starts as soon as the previous ends
+        (Web Speech API handles sequential queuing natively)
+   ════════════════════════════════════════════════════════════ */
+let sentenceAccum  = '';   // accumulates raw token text
+let ttsQueue       = [];   // sentences waiting to be spoken
+let ttsSpeaking    = false;
+let ttsStreamDone  = false;
+
+const SENTENCE_END_RE  = /[.!?]\s/;   // punctuation followed by whitespace
+const HARD_CAP_CHARS   = 220;          // flush even without punctuation at this length
+
+function ttsReset() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  sentenceAccum = '';
+  ttsQueue      = [];
+  ttsSpeaking   = false;
+  ttsStreamDone = false;
+}
+
+/* Called for every token chunk from the stream */
+function ttsIngest(token) {
+  if (!token) return;
+  sentenceAccum += token;
+
+  // Detect sentence boundary: punctuation + whitespace anywhere in accum
+  let flushUpTo = -1;
+  const match = sentenceAccum.search(SENTENCE_END_RE);
+  if (match !== -1) {
+    // flush everything up to and including the punctuation + space
+    flushUpTo = match + 2;
+  } else if (sentenceAccum.length >= HARD_CAP_CHARS) {
+    // Hard cap: find the last whitespace to avoid mid-word cuts
+    const lastSpace = sentenceAccum.lastIndexOf(' ');
+    flushUpTo = lastSpace > 0 ? lastSpace + 1 : sentenceAccum.length;
+  }
+
+  if (flushUpTo > 0) {
+    const sentence = sentenceAccum.slice(0, flushUpTo).trim();
+    sentenceAccum  = sentenceAccum.slice(flushUpTo);
+    if (sentence) ttsEnqueue(sentence);
+  }
+}
+
+/* Called when the LLM stream is fully done */
+function ttsFlushRemaining() {
+  ttsStreamDone = true;
+  const leftover = sentenceAccum.trim();
+  sentenceAccum  = '';
+  if (leftover) ttsEnqueue(leftover);
+  // If nothing is queued/speaking right now, we're already done
+  if (!ttsSpeaking && ttsQueue.length === 0) onSpeechDone();
+}
+
+function ttsEnqueue(sentence) {
+  ttsQueue.push(sentence);
+  if (!ttsSpeaking) ttsDequeue();
+}
+
+function ttsDequeue() {
+  if (ttsQueue.length === 0) {
+    ttsSpeaking = false;
+    if (ttsStreamDone) onSpeechDone();
+    return;
+  }
+  ttsSpeaking = true;
+  const sentence = ttsQueue.shift();
+  ttsSpeak(sentence);
+}
+
+function ttsSpeak(sentence) {
+  if (!window.speechSynthesis) { ttsDequeue(); return; }
+
+  // Resume AudioContext if suspended (browser autoplay policy)
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+  const utter    = new SpeechSynthesisUtterance(sentence);
+  if (ttsVoice) utter.voice = ttsVoice;
+  utter.pitch    = 0.30;
+  utter.rate     = 0.96;
+  try { utter.lang = ttsVoice?.lang || 'en-US'; } catch {}
+
+  utter.onend    = () => ttsDequeue();
+  utter.onerror  = () => ttsDequeue();
+
+  window.speechSynthesis.speak(utter);
+}
+
+/* ── State machine ── */
 function setState(state) {
   orb.className = 'orb-wrapper ' + state;
   orbStatus.textContent = state;
-  if (state === 'speaking') orbStatus.style.color = 'rgba(6,182,212,0.8)';
+  if      (state === 'speaking')  orbStatus.style.color = 'rgba(6,182,212,0.8)';
   else if (state === 'listening') orbStatus.style.color = 'rgba(165,180,252,0.8)';
-  else if (state === 'thinking') orbStatus.style.color = 'rgba(250,204,21,0.8)';
-  else orbStatus.style.color = 'rgba(148,163,184,0.5)';
+  else if (state === 'thinking')  orbStatus.style.color = 'rgba(250,204,21,0.8)';
+  else                             orbStatus.style.color = 'rgba(148,163,184,0.5)';
 }
 
-// ── Health check ──
+/* ── Health check ── */
 async function checkHealth() {
   try {
     const r = await fetch(`${BACKEND}/health`);
     const d = await r.json();
-    const dot = document.querySelector('#connection-dot .w-2');
+    const dot = document.querySelector('#connection-dot div');
     const txt = document.getElementById('conn-text');
     if (d.ollama) {
-      dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      dot.style.background = '#34d399';
       txt.textContent = 'connected';
       txt.style.color = 'rgba(52,211,153,0.8)';
     } else {
-      dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+      dot.style.background = '#fbbf24';
       txt.textContent = 'ollama offline';
       txt.style.color = 'rgba(251,191,36,0.8)';
     }
   } catch {
-    const dot = document.querySelector('#connection-dot .w-2');
-    dot.className = 'w-2 h-2 rounded-full bg-red-400';
+    const dot = document.querySelector('#connection-dot div');
+    dot.style.background = '#f87171';
     document.getElementById('conn-text').textContent = 'backend offline';
     document.getElementById('conn-text').style.color = 'rgba(248,113,113,0.8)';
   }
@@ -429,10 +627,13 @@ async function checkHealth() {
 checkHealth();
 setInterval(checkHealth, 10000);
 
-// ── Chat rendering ──
+/* ── Chat rendering ── */
 function addMessage(role, content, streaming = false) {
   const div = document.createElement('div');
-  div.className = `px-4 py-3 text-sm leading-relaxed ${role === 'user' ? 'msg-user ml-8' : 'msg-assistant mr-8'}`;
+  div.style.cssText = 'padding:12px 16px; font-size:14px; line-height:1.6;';
+  div.className = role === 'user' ? 'msg-user' : 'msg-assistant';
+  div.style.marginLeft  = role === 'user' ? '2rem' : '0';
+  div.style.marginRight = role === 'user' ? '0' : '2rem';
   if (streaming) {
     div.innerHTML = '<span class="content"></span><span class="cursor"></span>';
   } else {
@@ -453,7 +654,9 @@ function finalizeMessage(div) {
   if (cursor) cursor.remove();
 }
 
-// ── Send to backend ──
+/* ════════════════════════════════════════════════════════════
+   SEND MESSAGE + STREAM HANDLER
+   ════════════════════════════════════════════════════════════ */
 async function sendMessage(userText) {
   if (!userText.trim() || isBusy) return;
   isBusy = true;
@@ -461,40 +664,38 @@ async function sendMessage(userText) {
 
   messages.push({ role: 'user', content: userText });
   addMessage('user', userText);
-
   setState('thinking');
-  // Only stop recognition if not in continuous talk mode
   if (!continuousTalk) stopListening();
 
+  // Init / re-init WebAudio pipeline fresh for each response
+  // (AudioContext must be created/resumed after a user gesture — sending counts)
+  try { buildAudioSink(true); } catch (e) { console.warn('WebAudio init failed, continuing without:', e); }
+
+  // Reset TTS state machine
+  ttsReset();
+
   const assistantDiv = addMessage('assistant', '', true);
-  let fullResponse = '';
+  let fullResponse   = '';
 
   try {
     const res = await fetch(`${BACKEND}/chat`, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages })
+      body:    JSON.stringify({ messages })
     });
 
     setState('speaking');
-    // clear any queued speech from previous responses
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    pendingUtterances = 0;
-    streamingDone = false;
-    // clear any buffered chunks
-    streamBuffer = '';
-    if (streamFlushTimer) { clearTimeout(streamFlushTimer); streamFlushTimer = null; }
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
+    const reader    = res.body.getReader();
+    const decoder   = new TextDecoder();
+    let   sseBuffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer   = lines.pop(); // hold incomplete trailing line
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         try {
@@ -502,27 +703,20 @@ async function sendMessage(userText) {
           if (data.text) {
             fullResponse += data.text;
             updateStreamingMessage(assistantDiv, fullResponse);
-            // buffer chunk for smarter flushing
-            speakStreamChunk(data.text);
-          }
-          if (data.done) {
-            streamingDone = true;
+            ttsIngest(data.text); // feed token → sentence accumulator
           }
         } catch {}
       }
     }
 
-    // process any leftover buffered line
-    if (buffer.trim()) {
+    // Process any leftover SSE line
+    if (sseBuffer.trim().startsWith('data: ')) {
       try {
-        if (buffer.startsWith('data: ')) {
-          const data = JSON.parse(buffer.slice(6));
-          if (data.text) {
-            fullResponse += data.text;
-            updateStreamingMessage(assistantDiv, fullResponse);
-            speakStreamChunk(data.text);
-          }
-          if (data.done) streamingDone = true;
+        const data = JSON.parse(sseBuffer.slice(6));
+        if (data.text) {
+          fullResponse += data.text;
+          updateStreamingMessage(assistantDiv, fullResponse);
+          ttsIngest(data.text);
         }
       } catch {}
     }
@@ -530,11 +724,9 @@ async function sendMessage(userText) {
     finalizeMessage(assistantDiv);
     messages.push({ role: 'assistant', content: fullResponse });
 
-    // If browser doesn't support speechSynthesis, just finish
-    if (!window.speechSynthesis) {
-      streamingDone = true;
-      onSpeechDone();
-    }
+    // Tell TTS no more tokens are coming — flush remainder + trigger done
+    ttsFlushRemaining();
+    if (!window.speechSynthesis) onSpeechDone();
 
   } catch (err) {
     finalizeMessage(assistantDiv);
@@ -545,58 +737,6 @@ async function sendMessage(userText) {
   }
 }
 
-// ── TTS via Web Speech API ──
-function scheduleUtteranceChunk(text) {
-  if (!window.speechSynthesis) return;
-  const utter = new SpeechSynthesisUtterance(text);
-  // prefer selected voice if available
-  if (ttsVoice) utter.voice = ttsVoice;
-  // make it deeper and slightly faster for a Jarvis-like tone
-  utter.pitch = 0.45;
-  utter.rate = 1.05;
-  pendingUtterances++;
-  utter.onend = () => {
-    pendingUtterances = Math.max(0, pendingUtterances - 1);
-    if (streamingDone && pendingUtterances === 0) onSpeechDone();
-  };
-  utter.onerror = () => {
-    pendingUtterances = Math.max(0, pendingUtterances - 1);
-    if (streamingDone && pendingUtterances === 0) onSpeechDone();
-  };
-  window.speechSynthesis.speak(utter);
-}
-
-function speakStreamChunk(text) {
-  if (!text || !text.trim()) return;
-  if (!window.speechSynthesis) return;
-  // accumulate into buffer and flush on punctuation, size, or short silence
-  streamBuffer += (streamBuffer ? ' ' : '') + text.trim();
-
-  const shouldFlushNow = (() => {
-    if (streamBuffer.length >= STREAM_MIN_CHARS) return true;
-    // if the incoming text ends with strong punctuation, flush
-    const lastChar = text.trim().slice(-1);
-    if (['.', '!', '?', '\n'].includes(lastChar)) return true;
-    return false;
-  })();
-
-  if (shouldFlushNow) {
-    if (streamFlushTimer) { clearTimeout(streamFlushTimer); streamFlushTimer = null; }
-    const toSpeak = streamBuffer.trim();
-    streamBuffer = '';
-    scheduleUtteranceChunk(toSpeak);
-  } else {
-    // reset short-timer to flush grouped partials quickly
-    if (streamFlushTimer) clearTimeout(streamFlushTimer);
-    streamFlushTimer = setTimeout(() => {
-      const toSpeak = streamBuffer.trim();
-      streamBuffer = '';
-      streamFlushTimer = null;
-      if (toSpeak) scheduleUtteranceChunk(toSpeak);
-    }, STREAM_FLUSH_MS);
-  }
-}
-
 function onSpeechDone() {
   setState(isListening ? 'listening' : 'idle');
   isBusy = false;
@@ -604,65 +744,36 @@ function onSpeechDone() {
   if (isListening) startRecognition();
 }
 
-// ── Speech recognition (VAD) ──
+/* ── Speech recognition ── */
 function setupRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    micBtn.title = 'Speech not supported in this browser';
-    return null;
-  }
+  if (!SpeechRecognition) { micBtn.title = 'Speech not supported in this browser'; return null; }
   const r = new SpeechRecognition();
   r.continuous = true;
   r.interimResults = true;
   r.lang = 'en-US';
-
   let finalTranscript = '';
-  let lastSpeechTime = Date.now();
 
-  r.onstart = () => { finalTranscript = ''; setState('listening'); };
-
+  r.onstart  = () => { finalTranscript = ''; setState('listening'); };
   r.onresult = (e) => {
-    lastSpeechTime = Date.now();
     clearTimeout(vadTimeout);
-
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      const result = e.results[i];
-      // Each result is a SpeechRecognitionResult; alternatives live at result[0].transcript
-      const t = (result[0] && result[0].transcript) ? result[0].transcript : '';
-      if (result.isFinal) finalTranscript += t;
-      else interim += t;
+      const res = e.results[i];
+      const t = (res[0] && res[0].transcript) ? res[0].transcript : '';
+      if (res.isFinal) finalTranscript += t; else interim += t;
     }
-
-    // Ignore recognition while assistant TTS is speaking to avoid self-capture
     if (continuousTalk && window.speechSynthesis && window.speechSynthesis.speaking) return;
-
-    // VAD: send after configurable silence (1s when continuousTalk enabled, otherwise default)
     const silenceMs = continuousTalk ? 1000 : VAD_SILENCE_MS;
     if (finalTranscript || interim) {
       vadTimeout = setTimeout(() => {
         const text = (finalTranscript + interim).trim();
-        if (text && !isBusy) {
-          textInput.value = '';
-          sendMessage(text);
-        }
+        if (text && !isBusy) { textInput.value = ''; sendMessage(text); }
       }, silenceMs);
     }
   };
-
-  r.onend = () => {
-    if (isListening && !isBusy) {
-      // Restart if still supposed to be listening
-      setTimeout(() => { try { r.start(); } catch {} }, 200);
-    }
-  };
-
-  r.onerror = (e) => {
-    if (e.error !== 'no-speech' && e.error !== 'aborted') {
-      console.error('Speech recognition error:', e.error);
-    }
-  };
-
+  r.onend   = () => { if (isListening && !isBusy) setTimeout(() => { try { r.start(); } catch {} }, 200); };
+  r.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') console.error('STT error:', e.error); };
   return r;
 }
 
@@ -685,53 +796,37 @@ function stopListening() {
   if (!isBusy) setState('idle');
 }
 
-// Continuous talk mode: keep mic active and use shorter VAD
-const talkBtn = document.getElementById('talk-btn');
-function setContinuousTalk(on) {
-  continuousTalk = !!on;
-  if (continuousTalk) {
-    talkBtn.classList.add('active');
-    talkBtn.title = 'Continuous talk: ON (sends after 1s silence)';
-    // ensure recognition running
-    if (!recognition) recognition = setupRecognition();
-    if (!isListening) {
-      isListening = true;
-      micBtn.classList.add('active');
-      try { recognition.start(); } catch {}
-    }
-  } else {
-    talkBtn.classList.remove('active');
-    talkBtn.title = 'Continuous talk: OFF';
-  }
-}
-
-talkBtn.addEventListener('click', () => {
-  setContinuousTalk(!continuousTalk);
-});
-
 function startRecognition() {
   if (!recognition) recognition = setupRecognition();
   if (!recognition || !isListening) return;
   try { recognition.start(); } catch {}
 }
 
-micBtn.addEventListener('click', () => {
-  if (isListening) stopListening();
-  else startListening();
-});
+function setContinuousTalk(on) {
+  continuousTalk = !!on;
+  if (continuousTalk) {
+    talkBtn.classList.add('active');
+    talkBtn.title = 'Continuous talk: ON';
+    if (!recognition) recognition = setupRecognition();
+    if (!isListening) { isListening = true; micBtn.classList.add('active'); try { recognition.start(); } catch {} }
+  } else {
+    talkBtn.classList.remove('active');
+    talkBtn.title = 'Continuous talk: OFF';
+  }
+}
 
-// ── Text input ──
+micBtn.addEventListener('click',  () => { isListening ? stopListening() : startListening(); });
+talkBtn.addEventListener('click', () => { setContinuousTalk(!continuousTalk); });
+
+/* ── Text input ── */
 function handleSend() {
   const text = textInput.value.trim();
-  if (text) {
-    textInput.value = '';
-    sendMessage(text);
-  }
+  if (text) { textInput.value = ''; sendMessage(text); }
 }
 sendBtn.addEventListener('click', handleSend);
 textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend(); });
 
-// ── Greeting ──
+/* ── Greeting ── */
 window.addEventListener('load', () => {
   setTimeout(() => {
     setState('idle');
