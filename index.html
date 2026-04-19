@@ -383,12 +383,13 @@ const talkBtn    = document.getElementById('talk-btn');
 const textInput  = document.getElementById('text-input');
 const sendBtn    = document.getElementById('send-btn');
 
-let messages       = [];
-let isListening    = false;
-let recognition    = null;
-let vadTimeout     = null;
-let isBusy         = false;
-let continuousTalk = false;
+let messages           = [];
+let isListening        = false;
+let recognition        = null;
+let vadTimeout         = null;
+let isBusy             = false;
+let continuousTalk     = false;
+let finalTranscript    = ''; // VAD accumulator — reset after each send
 
 const VAD_SILENCE_MS = 1500;
 
@@ -752,7 +753,6 @@ function setupRecognition() {
   r.continuous = true;
   r.interimResults = true;
   r.lang = 'en-US';
-  let finalTranscript = '';
 
   r.onstart  = () => { finalTranscript = ''; setState('listening'); };
   r.onresult = (e) => {
@@ -768,7 +768,11 @@ function setupRecognition() {
     if (finalTranscript || interim) {
       vadTimeout = setTimeout(() => {
         const text = (finalTranscript + interim).trim();
-        if (text && !isBusy) { textInput.value = ''; sendMessage(text); }
+        if (text && !isBusy) {
+          textInput.value = '';
+          finalTranscript = ''; // Reset accumulator before sending
+          sendMessage(text);
+        }
       }, silenceMs);
     }
   };
